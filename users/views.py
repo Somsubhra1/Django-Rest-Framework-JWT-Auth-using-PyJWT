@@ -5,8 +5,11 @@ from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from .models import User
 import jwt
 import datetime
+import os
 
 # Create your views here.
+
+JWT_SECRET = os.environ.get('JWT_SECRET')
 
 
 class RegisterView(APIView):
@@ -39,7 +42,7 @@ class LoginView(APIView):
             'iat': datetime.datetime.utcnow()
         }
 
-        token = jwt.encode(payload, 'secret', algorithm='HS256')
+        token = jwt.encode(payload, JWT_SECRET, algorithm='HS256')
 
         response = Response()
 
@@ -61,7 +64,7 @@ class UserView(APIView):
             raise NotAuthenticated('Unauthenticated')
 
         try:
-            payload = jwt.decode(token, 'secret', ['HS256'])
+            payload = jwt.decode(token, JWT_SECRET, ['HS256'])
         except jwt.ExpiredSignatureError:
             raise NotAuthenticated('Unauthenticated')
 
