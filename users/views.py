@@ -1,10 +1,7 @@
-from rest_framework import serializers
-from rest_framework import response
 from .serializer import UserSerializer
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, NotAuthenticated
 from .models import User
 import jwt
 import datetime
@@ -44,4 +41,44 @@ class LoginView(APIView):
 
         token = jwt.encode(payload, 'secret', algorithm='HS256')
 
-        return Response({'success': True, 'token': token})
+        response = Response()
+
+        response.set_cookie(key='jwt', value=token, httponly=True)
+
+        response.data = {
+            'success': True,
+            'token': token
+        }
+
+        return response
+
+
+class UserView(APIView):
+    def get(self, request):
+        token = request.COOKIES.get('jwt')
+
+        if not token:
+            raise NotAuthenticated('Unauthenticated')
+
+        try:
+            payload = jwt.decode(token, 'secret', ['HS256'])
+        except jwt.ExpiredSignatureError:
+            raise NotAuthenticated('Unauthenticated')
+
+        user = User.objects.get(id=payload['id'])
+
+        serializer = UserSerializer(user)
+
+        return Response(serializer.data)
+
+
+class Logout(APIView):
+    def get(self, request):
+        response = Response()
+        response.delete_cookie('jwt')
+
+        response.data = {
+            'success': True
+        }
+
+        return response

@@ -1,6 +1,7 @@
 asgiref==3.3.4
 autopep8==1.5.7
 Django==3.2.3
+django-cors-headers==3.7.0
 djangorestframework==3.12.4
 pycodestyle==2.7.0
 PyJWT==2.1.0
